@@ -13,10 +13,60 @@ import { ChevronDown, Send, Settings, Plus, Home, LogOut } from 'lucide-react'
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toogle"
 
+const USER_CACHE_KEY = 'auth0_user_cache'
+const CACHE_DURATION = 1000 * 60 * 60
+
+type UserButtonProps = {
+  user: any
+  cachedUser: any
+  isLoading: boolean
+}
+
+const UserButton = ({ user, cachedUser, isLoading }: UserButtonProps) => {
+  const displayUser = cachedUser || user
+  return (
+    <Button variant="ghost" className="w-full justify-start gap-2 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+      {isLoading && !cachedUser ? (
+        <>
+          <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+          <ChevronDown className="h-4 w-4 ml-auto" />
+        </>
+      ) : (
+        <>
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={displayUser?.picture} alt={displayUser?.name || 'User avatar'} />
+            <AvatarFallback>{displayUser?.given_name?.[0]}</AvatarFallback>
+          </Avatar>
+          <span
+            className="text-sm truncate max-w-[100px] lg:max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
+            title={displayUser?.name} // Show full name on hover
+          >
+            {displayUser?.name}
+          </span>
+          <ChevronDown className="h-4 w-4 ml-auto" />
+        </>
+      )}
+    </Button>
+  )
+}
+
 export default function ChatPage() {
-  const { user, logout } = useAuth0()
+  const { user, logout, isLoading } = useAuth0()
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const [cachedUser, setCachedUser] = useState(() => {
+    const cached = localStorage.getItem(USER_CACHE_KEY)
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached)
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        return data
+      }
+      localStorage.removeItem(USER_CACHE_KEY)
+    }
+    return null
+  })
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value)
@@ -39,6 +89,12 @@ export default function ChatPage() {
     }
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem(USER_CACHE_KEY)
+    setCachedUser(null)
+    logout({ returnTo: window.location.origin })
+  }
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (textareaRef.current && !textareaRef.current.contains(event.target as Node)) {
@@ -52,9 +108,18 @@ export default function ChatPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (user && !isLoading) {
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify({
+        data: user,
+        timestamp: Date.now()
+      }))
+      setCachedUser(user)
+    }
+  }, [user, isLoading])
+
   return (
     <div className="flex min-h-screen bg-white dark:bg-zinc-900 text-gray-900 dark:text-gray-100">
-      {/* Sidebar */}
       <div className="w-64 border-r border-gray-200 dark:border-zinc-800 p-4 flex flex-col bg-gray-50 dark:bg-zinc-800/50 backdrop-blur-sm">
         <Button
           variant="secondary"
@@ -75,24 +140,23 @@ export default function ChatPage() {
           New Chat
         </Button>
 
-        <div className="flex-1">
-          {/* Chat history would go here */}
-        </div>
+        <div className="flex-1" />
 
         <Separator className="my-4 dark:bg-zinc-700" />
+
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start gap-2 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.picture} alt={user?.name || 'User avatar'} />
-                <AvatarFallback>{user?.given_name?.[0]}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm">{user?.name}</span>
-              <ChevronDown className="h-4 w-4 ml-auto" />
-            </Button>
-          </DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>
+        <div>
+            <UserButton user={user} cachedUser={cachedUser} isLoading={isLoading} />
+        </div>
+        </DropdownMenuTrigger>
+
           <DropdownMenuContent align="end" className="w-56 dark:bg-zinc-800 dark:border-zinc-700">
-            <DropdownMenuItem onClick={() => logout({ returnTo: window.location.origin })} className="dark:hover:bg-slate-700 dark:focus:bg-slate-700">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="dark:hover:bg-slate-700 dark:focus:bg-slate-700"
+              disabled={isLoading}
+            >
               <LogOut className="h-4 w-4 mr-2" />
               Log out
             </DropdownMenuItem>
@@ -100,9 +164,7 @@ export default function ChatPage() {
         </DropdownMenu>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <header className="flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 px-4 py-2 bg-gray-50 dark:bg-zinc-800/50 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -127,12 +189,8 @@ export default function ChatPage() {
           </div>
         </header>
 
-        {/* Chat Area */}
-        <main className="flex-1 overflow-auto p-4 bg-white dark:bg-zinc-900">
-          {/* Chat messages would go here */}
-        </main>
+        <main className="flex-1 overflow-auto p-4 bg-white dark:bg-zinc-900" />
 
-        {/* Input Area */}
         <div className="border-t border-gray-200 dark:border-zinc-800 p-4 bg-gray-50 dark:bg-zinc-800/50 backdrop-blur-sm">
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="max-w-3xl mx-auto">
             <div className="relative">
