@@ -1,10 +1,11 @@
 import { Navbar } from "@/components/navbar";
 import { Vortex } from "../components/ui/vortex";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export function VortexDemoSecond() {
     const words = `Introducing AubergineGPT`;
-
+    const {isAuthenticated} = useAuth0();
   return (
     <div className="min-h-screen flex flex-col">
 
