@@ -5,8 +5,8 @@ import { useAuth0, User } from '@auth0/auth0-react';
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
-  user: User | null;
-  error: Error | null;
+  user: User | null | undefined;
+  error: Error | null | undefined;
 }
 
 interface AuthContextType extends AuthState {

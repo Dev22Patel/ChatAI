@@ -13,7 +13,7 @@ import { ChevronDown, Send, Settings, Plus, Home, LogOut } from 'lucide-react'
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toogle"
 
-const USER_CACHE_KEY = 'auth0_user_cache'
+const USER_CACHE_KEY = "user-cache"
 const CACHE_DURATION = 1000 * 60 * 60
 
 type UserButtonProps = {

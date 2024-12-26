@@ -17,7 +17,7 @@ const Layout = () => {
 
 export const Router = () => {
     const { isAuthenticated, isLoading, loginWithRedirect, handleRedirectCallback } = useAuth();
-  
+
     // Handle the authentication callback
     useEffect(() => {
       if (window.location.search.includes('code=')) {
@@ -32,8 +32,8 @@ export const Router = () => {
         })();
       }
     }, [handleRedirectCallback]);
-  
-    if (isLoading) return ( 
+
+    if (isLoading) return (
     <div className="flex justify-center items-center min-h-screen">
     <div className="flex flex-row gap-2">
       <div className="w-4 h-4 rounded-full bg-black dark:bg-slate-100 animate-bounce"></div>
@@ -47,10 +47,10 @@ export const Router = () => {
     </div>
     )
     ;
-  
-    const ProtectedRoute = ({ children }) => {
+
+    const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       const location = window.location;
-      
+
       if (!isAuthenticated) {
         loginWithRedirect({
           appState: {
