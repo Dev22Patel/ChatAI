@@ -9,11 +9,6 @@ export function VortexDemoSecond() {
   return (
     <div className="min-h-screen flex flex-col">
 
-
-      {/* Navigation */}
-      <Navbar />
-
-
       {/* Main Content with Vortex Background */}
       <main className="flex-1">
         <Vortex
