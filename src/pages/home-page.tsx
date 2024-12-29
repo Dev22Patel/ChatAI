@@ -1,10 +1,8 @@
-import { Navbar } from "@/components/navbar";
 import { Vortex } from "../components/ui/vortex";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 
 export function VortexDemoSecond() {
     const words = `Introducing AubergineGPT`;
-
   return (
     <div className="min-h-screen flex flex-col">
 

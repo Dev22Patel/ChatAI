@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toogle"
 import { useAuth } from '@/router/AuthContext'
 
-const USER_CACHE_KEY = 'auth0_user_cache'
+const USER_CACHE_KEY = "user-cache"
 const CACHE_DURATION = 1000 * 60 * 60
 
 type UserButtonProps = {
@@ -26,7 +26,7 @@ type UserButtonProps = {
 const UserButton = ({ user, cachedUser, isLoading }: UserButtonProps) => {
   const displayUser = cachedUser || user
   return (
-    <Button variant="ghost" className="w-full justify-start gap-2 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+    <Button variant="ghost" className="w-full justify-start gap-2 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
       {isLoading && !cachedUser ? (
         <>
           <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
@@ -172,7 +172,7 @@ export default function ChatPage() {
       <div className="w-64 border-r border-gray-200 dark:border-zinc-800 p-4 flex flex-col bg-gray-50 dark:bg-zinc-800/50 backdrop-blur-sm">
         <Button
           variant="secondary"
-          className="w-full justify-start gap-2 mb-3 bg-white/50 hover:bg-gray-100 text-gray-900 dark:bg-slate-700/50 dark:hover:bg-slate-600 dark:text-gray-100 transition-colors"
+          className="w-full justify-start gap-2 mb-3 bg-zinc-200 hover:bg-zinc-300 text-gray-900 dark:bg-slate-700/50 dark:hover:bg-slate-600 dark:text-gray-100 transition-colors"
           asChild
         >
           <a href="/">
@@ -183,7 +183,7 @@ export default function ChatPage() {
 
         <Button
           variant="default"
-          className="w-full justify-start gap-2 mb-4 bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-700 transition-colors"
+          className="w-full justify-start gap-2 mb-4 bg-zinc-700 hover:bg-zinc-800 text-white dark:bg-indigo-600 dark:hover:bg-indigo-700 transition-colors"
         >
           <Plus className="h-4 w-4" />
           New Chat
@@ -232,7 +232,7 @@ export default function ChatPage() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+            <Button variant="ghost" size="icon" className="bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors">
               <Settings className="h-5 w-5" />
             </Button>
           </div>
