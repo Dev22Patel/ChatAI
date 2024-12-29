@@ -1,4 +1,5 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from 'react'
+import axios from 'axios'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,10 +9,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea"
-import { useAuth0 } from "@auth0/auth0-react"
 import { ChevronDown, Send, Settings, Plus, Home, LogOut } from 'lucide-react'
 import { Separator } from "@/components/ui/separator"
 import { ThemeToggle } from "@/components/theme-toogle"
+import { useAuth } from '@/router/AuthContext'
 
 const USER_CACHE_KEY = 'auth0_user_cache'
 const CACHE_DURATION = 1000 * 60 * 60
@@ -52,9 +53,12 @@ const UserButton = ({ user, cachedUser, isLoading }: UserButtonProps) => {
 }
 
 export default function ChatPage() {
-  const { user, logout, isLoading } = useAuth0()
+  const { user, logout, isLoading } = useAuth()
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [loading, setLoading] = useState(false); // Add loading state
+  const [messages, setMessages] = useState([{ role: 'assistant', content: 'Hello! How can I assist you today?' }])
+
 
   const [cachedUser, setCachedUser] = useState(() => {
     const cached = localStorage.getItem(USER_CACHE_KEY)
@@ -79,13 +83,46 @@ export default function ChatPage() {
     }
   }
 
-  const handleSubmit = () => {
-    if (input.trim()) {
-      console.log("Submitted:", input)
-      setInput('')
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
-      }
+  const handleSubmit = async () => {
+    if (!input.trim()) return
+
+    // Add user's message to the chat
+    const userMessage = { role: 'user', content: input.trim() }
+    setMessages((prev) => [...prev, userMessage])
+    console.log("Message:", messages)
+    setInput('')
+    setLoading(true); // Start loading
+
+
+    try {
+      // Call OpenAI API
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          messages: [...messages, userMessage], // Include chat history
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API}`,
+          },
+        }
+      )
+
+      console.log(response.data.choices)
+
+      // Add assistant's response to the chat
+      const assistantMessage = response.data.choices[0].message
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Error fetching OpenAI response:', error)
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: 'Something went wrong. Please try again.' },
+      ])
+    }finally {
+      setLoading(false); // End loading
     }
   }
 
@@ -117,6 +154,18 @@ export default function ChatPage() {
       setCachedUser(user)
     }
   }, [user, isLoading])
+
+  const formatMessageContent = (content: string) => {
+    const lines = content.split('\n').filter((line) => line.trim() !== '')
+    return lines.map((line, index) => {
+      const isBold = /\*\*(.*?)\*\*/.test(line)
+      if (isBold) {
+        const boldText = line.replace(/\*\*(.*?)\*\*/, '<strong>$1</strong>')
+        return <p key={index} dangerouslySetInnerHTML={{ __html: boldText }} />
+      }
+      return <p key={index}>{line}</p>
+    })
+  }
 
   return (
     <div className="flex min-h-screen bg-white dark:bg-zinc-900 text-gray-900 dark:text-gray-100">
@@ -189,7 +238,29 @@ export default function ChatPage() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-4 bg-white dark:bg-zinc-900" />
+        <main className="flex-1 overflow-auto p-4 bg-white dark:bg-zinc-900">
+  {loading && (
+    <div className="flex items-center justify-center mb-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
+    </div>
+  )}
+  {messages.map((msg, idx) => (
+    <div
+      key={idx}
+      className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}
+    >
+      <div
+        className={`inline-block p-3 rounded-lg ${
+          msg.role === 'user'
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-200 text-gray-900'
+        }`}
+      >
+        {formatMessageContent(msg.content)}
+      </div>
+    </div>
+  ))}
+</main>
 
         <div className="border-t border-gray-200 dark:border-zinc-800 p-4 bg-gray-50 dark:bg-zinc-800/50 backdrop-blur-sm">
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="max-w-3xl mx-auto">
